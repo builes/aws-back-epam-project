@@ -26,23 +26,54 @@ provider:
   stage: dev
   region: us-east-1
 
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:DescribeTable"
+        - "dynamodb:Query"
+        - "dynamodb:Scan"
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:UpdateItem"
+        - "dynamodb:DeleteItem"
+      Resource:
+        - "arn:aws:dynamodb:us-east-1:937617902840:table/products"
+        - "arn:aws:dynamodb:us-east-1:937617902840:table/stocks"
+
 plugins:
   - serverless-offline
 
 functions:
   getProductList: # this name will be used as a function name in AWS
-    handler: handler.getProductList
+    handler: getProductsList.getProductsList
     events:
       - http:
           path: /products
           method: get
+    # this is how you can add environment variables to your function, are only available in the function scope
+    # in this case we are adding a variable named `PRODUCTS_TABLE` and its value is ref to DynamoDB table
+    environment:
+      PRODUCTS_TABLE: !Ref products
+      STOCKS_TABLE: !Ref stocks
 
   getProductsById:
-    handler: handler.getProductsById
+    handler: getProductsById.getProductsById
     events:
       - http:
           path: /products/{id}
           method: get
+    environment:
+      PRODUCTS_TABLE: !Ref products
+      STOCKS_TABLE: !Ref stocks
+
+  createProduct:
+    handler: createProduct.createProduct
+    events:
+      - http:
+          path: /products
+          method: post
+    environment:
+      PRODUCTS_TABLE: !Ref products
 
 resources:
   Resources:
